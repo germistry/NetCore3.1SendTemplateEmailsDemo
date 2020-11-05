@@ -6,6 +6,8 @@ using SendTemplateEmailsDemo.Data;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using NETCore.MailKit.Extensions;
+using NETCore.MailKit.Infrastructure.Internal;
 
 namespace SendTemplateEmailsDemo
 {
@@ -31,6 +33,10 @@ namespace SendTemplateEmailsDemo
                 options.SignIn.RequireConfirmedAccount = false;
             })
                 .AddEntityFrameworkStores<ApplicationDbContext>();
+
+            services.AddMailKit(config => config.UseMailKit(
+                Configuration.GetSection("EmailSettings").Get<MailKitOptions>()));
+
             services.AddControllersWithViews();
             services.AddRazorPages();
         }

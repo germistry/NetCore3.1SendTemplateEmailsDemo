@@ -22,7 +22,14 @@ namespace SendTemplateEmailsDemo.Controllers
         {
             return View();
         }
-
+        public IActionResult ContactMVC()
+        {
+            return View();
+        }
+        public IActionResult ContactResultMVC()
+        {
+            return View();
+        }
         public IActionResult Privacy()
         {
             return View();
