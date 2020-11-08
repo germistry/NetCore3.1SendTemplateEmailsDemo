@@ -1,4 +1,4 @@
-# NetCore3.1SendTemplateEmailsDemo
+# NetCore3.1 Send Template Emails Demo
 A demo Asp.net core 3.1 Web App using NetCore.Mailkit package with Scaffolded Identity 
 
-Check out my <a href="#">blog post</a> about this demo! 
+Check out my [blog post](https://germistry.com/Post/9/send-template-emails-with-net-core-mailkit) about this demo! 
