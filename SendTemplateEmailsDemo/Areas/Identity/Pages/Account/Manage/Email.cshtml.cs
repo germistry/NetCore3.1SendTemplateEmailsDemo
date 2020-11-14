@@ -6,10 +6,12 @@ using System.Text.Encodings.Web;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
+using NETCore.MailKit.Core;
+using Microsoft.Extensions.Configuration;
+using System.IO;
 
 namespace SendTemplateEmailsDemo.Areas.Identity.Pages.Account.Manage
 {
@@ -17,16 +19,19 @@ namespace SendTemplateEmailsDemo.Areas.Identity.Pages.Account.Manage
     {
         private readonly UserManager<IdentityUser> _userManager;
         private readonly SignInManager<IdentityUser> _signInManager;
-        private readonly IEmailSender _emailSender;
+        private readonly IEmailService _emailService;
+        private readonly string _templatesPath;
 
         public EmailModel(
             UserManager<IdentityUser> userManager,
             SignInManager<IdentityUser> signInManager,
-            IEmailSender emailSender)
+            IEmailService emailService,
+            IConfiguration pathConfig)
         {
             _userManager = userManager;
             _signInManager = signInManager;
-            _emailSender = emailSender;
+            _emailService = emailService;
+            _templatesPath = pathConfig["Path:Templates"];
         }
 
         public string Username { get; set; }
@@ -93,16 +98,26 @@ namespace SendTemplateEmailsDemo.Areas.Identity.Pages.Account.Manage
             {
                 var userId = await _userManager.GetUserIdAsync(user);
                 var code = await _userManager.GenerateChangeEmailTokenAsync(user, Input.NewEmail);
+                code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
                 var callbackUrl = Url.Page(
                     "/Account/ConfirmEmailChange",
                     pageHandler: null,
                     values: new { userId = userId, email = Input.NewEmail, code = code },
                     protocol: Request.Scheme);
-                await _emailSender.SendEmailAsync(
-                    Input.NewEmail,
-                    "Confirm your email",
-                    $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
 
+                string path = Path.Combine(_templatesPath);
+                string template = "IdentityTemplate.html";
+                string FilePath = Path.Combine(path, template);
+
+                string body = $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.";
+
+                StreamReader str = new StreamReader(FilePath);
+                string mailText = str.ReadToEnd();
+                str.Close();
+                mailText = mailText.Replace("[username]", user.UserName).Replace("[body]", body);
+
+                await _emailService.SendAsync(Input.NewEmail, "Confirm your email", mailText, true);
+                
                 StatusMessage = "Confirmation link to change email sent. Please check your email.";
                 return RedirectToPage();
             }
@@ -134,10 +149,19 @@ namespace SendTemplateEmailsDemo.Areas.Identity.Pages.Account.Manage
                 pageHandler: null,
                 values: new { area = "Identity", userId = userId, code = code },
                 protocol: Request.Scheme);
-            await _emailSender.SendEmailAsync(
-                email,
-                "Confirm your email",
-                $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
+
+            string path = Path.Combine(_templatesPath);
+            string template = "IdentityTemplate.html";
+            string FilePath = Path.Combine(path, template);
+
+            string body = $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.";
+
+            StreamReader str = new StreamReader(FilePath);
+            string mailText = str.ReadToEnd();
+            str.Close();
+            mailText = mailText.Replace("[username]", user.UserName).Replace("[body]", body);
+
+            await _emailService.SendAsync(email, "Confirm your email", mailText, true);
 
             StatusMessage = "Verification email sent. Please check your email.";
             return RedirectToPage();

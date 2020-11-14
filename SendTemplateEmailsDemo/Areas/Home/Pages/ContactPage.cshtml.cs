@@ -45,22 +45,19 @@ namespace SendTemplateEmailsDemo.Areas.Home.Pages
         public async Task<IActionResult> OnPostAsync()
         {
             if (!ModelState.IsValid)
-                {
-                   return Page();
-                }
-           
-            string body = Input.Message;
-            string path = Path.Combine(_templatesPath);
-            string template = "ContactMeTemplate.html";
-            string FilePath = Path.Combine(path, template);
+               return Page();
 
-            StreamReader str = new StreamReader(FilePath);
+           
+            string path = Path.Combine(_templatesPath);
+            string template = "ContactTemplate.html";
+            string FullPath = Path.Combine(path, template);
+
+            StreamReader str = new StreamReader(FullPath);
             string mailText = str.ReadToEnd();
             str.Close();
-            mailText = mailText.Replace("[fromEmail]", Input.Email).Replace("[contactmessage]", body);
-            string subject = Input.Subject;
+            mailText = mailText.Replace("[fromEmail]", Input.Email).Replace("[fromName]", Input.Name).Replace("[contactMessage]", Input.Message);
 
-            await _emailService.SendAsync("testmailbox@test.com", subject, mailText, true);
+            await _emailService.SendAsync("testmailbox@test.com", Input.Subject, mailText, true);
                        
             return RedirectToPage("ContactPageResult");
         }

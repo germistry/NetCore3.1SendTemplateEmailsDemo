@@ -6,10 +6,12 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
+using NETCore.MailKit.Core;
+using Microsoft.Extensions.Configuration;
+using System.IO;
 
 namespace SendTemplateEmailsDemo.Areas.Identity.Pages.Account
 {
@@ -17,12 +19,15 @@ namespace SendTemplateEmailsDemo.Areas.Identity.Pages.Account
     public class ForgotPasswordModel : PageModel
     {
         private readonly UserManager<IdentityUser> _userManager;
-        private readonly IEmailSender _emailSender;
+        private readonly IEmailService _emailService;
+        private readonly string _templatesPath;
 
-        public ForgotPasswordModel(UserManager<IdentityUser> userManager, IEmailSender emailSender)
+        public ForgotPasswordModel(UserManager<IdentityUser> userManager, IEmailService emailService,
+            IConfiguration pathConfig)
         {
             _userManager = userManager;
-            _emailSender = emailSender;
+            _emailService = emailService;
+            _templatesPath = pathConfig["Path:Templates"];
         }
 
         [BindProperty]
@@ -56,10 +61,18 @@ namespace SendTemplateEmailsDemo.Areas.Identity.Pages.Account
                     values: new { area = "Identity", code },
                     protocol: Request.Scheme);
 
-                await _emailSender.SendEmailAsync(
-                    Input.Email,
-                    "Reset Password",
-                    $"Please reset your password by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
+                string path = Path.Combine(_templatesPath);
+                string template = "IdentityTemplate.html";
+                string FilePath = Path.Combine(path, template);
+
+                string body = $"Please reset your password by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.";
+
+                StreamReader str = new StreamReader(FilePath);
+                string mailText = str.ReadToEnd();
+                str.Close();
+                mailText = mailText.Replace("[username]", user.UserName).Replace("[body]", body);
+
+                await _emailService.SendAsync(Input.Email, "Reset Password", mailText, true);
 
                 return RedirectToPage("./ForgotPasswordConfirmation");
             }
