@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using NETCore.MailKit.Core;
 using SendTemplateEmailsDemo.Models;
 using SendTemplateEmailsDemo.ViewModels;
+using SendTemplateEmailsDemo.Helpers;
 
 namespace SendTemplateEmailsDemo.Controllers
 {
@@ -39,14 +40,8 @@ namespace SendTemplateEmailsDemo.Controllers
         {
             if (!ModelState.IsValid)
                 return View();
-            
-            string path = Path.Combine(_templatesPath);
-            string template = "ContactTemplate.html";
-            string FullPath = Path.Combine(path, template);
 
-            StreamReader str = new StreamReader(FullPath);
-            string mailText = str.ReadToEnd();
-            str.Close();
+            string mailText = EmailHelper.BuildTemplate(_templatesPath, "ContactTemplate.html");
             mailText = mailText.Replace("[fromEmail]", vm.Email).Replace("[fromName]", vm.Name).Replace("[contactMessage]", vm.Message);
 
             await _emailService.SendAsync("testmailbox@test.com", vm.Subject, mailText, true);

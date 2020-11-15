@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.WebUtilities;
 using NETCore.MailKit.Core;
 using Microsoft.Extensions.Configuration;
 using System.IO;
+using SendTemplateEmailsDemo.Helpers;
 
 namespace SendTemplateEmailsDemo.Areas.Identity.Pages.Account
 {
@@ -61,15 +62,9 @@ namespace SendTemplateEmailsDemo.Areas.Identity.Pages.Account
                     values: new { area = "Identity", code },
                     protocol: Request.Scheme);
 
-                string path = Path.Combine(_templatesPath);
-                string template = "IdentityTemplate.html";
-                string FilePath = Path.Combine(path, template);
-
                 string body = $"Please reset your password by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.";
-
-                StreamReader str = new StreamReader(FilePath);
-                string mailText = str.ReadToEnd();
-                str.Close();
+                
+                string mailText = EmailHelper.BuildTemplate(_templatesPath, "IdentityTemplate.html");
                 mailText = mailText.Replace("[username]", user.UserName).Replace("[body]", body);
 
                 await _emailService.SendAsync(Input.Email, "Reset Password", mailText, true);

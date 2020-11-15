@@ -15,6 +15,7 @@ using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using NETCore.MailKit.Core;
+using SendTemplateEmailsDemo.Helpers;
 
 namespace SendTemplateEmailsDemo.Areas.Identity.Pages.Account
 {
@@ -145,15 +146,9 @@ namespace SendTemplateEmailsDemo.Areas.Identity.Pages.Account
                             values: new { area = "Identity", userId = userId, code = code },
                             protocol: Request.Scheme);
 
-                        string path = Path.Combine(_templatesPath);
-                        string template = "IdentityTemplate.html";
-                        string FilePath = Path.Combine(path, template);
-
                         string body = $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.";
-
-                        StreamReader str = new StreamReader(FilePath);
-                        string mailText = str.ReadToEnd();
-                        str.Close();
+                        
+                        string mailText = EmailHelper.BuildTemplate(_templatesPath, "IdentityTemplate.html");
                         mailText = mailText.Replace("[username]", user.UserName).Replace("[body]", body);
 
                         await _emailService.SendAsync(Input.Email, "Confirm your email", mailText, true);

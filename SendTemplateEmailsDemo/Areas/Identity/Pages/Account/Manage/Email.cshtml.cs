@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.WebUtilities;
 using NETCore.MailKit.Core;
 using Microsoft.Extensions.Configuration;
 using System.IO;
+using SendTemplateEmailsDemo.Helpers;
 
 namespace SendTemplateEmailsDemo.Areas.Identity.Pages.Account.Manage
 {
@@ -104,16 +105,10 @@ namespace SendTemplateEmailsDemo.Areas.Identity.Pages.Account.Manage
                     pageHandler: null,
                     values: new { userId = userId, email = Input.NewEmail, code = code },
                     protocol: Request.Scheme);
-
-                string path = Path.Combine(_templatesPath);
-                string template = "IdentityTemplate.html";
-                string FilePath = Path.Combine(path, template);
-
+                                
                 string body = $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.";
-
-                StreamReader str = new StreamReader(FilePath);
-                string mailText = str.ReadToEnd();
-                str.Close();
+                
+                string mailText = EmailHelper.BuildTemplate(_templatesPath, "IdentityTemplate.html");
                 mailText = mailText.Replace("[username]", user.UserName).Replace("[body]", body);
 
                 await _emailService.SendAsync(Input.NewEmail, "Confirm your email", mailText, true);
@@ -150,15 +145,9 @@ namespace SendTemplateEmailsDemo.Areas.Identity.Pages.Account.Manage
                 values: new { area = "Identity", userId = userId, code = code },
                 protocol: Request.Scheme);
 
-            string path = Path.Combine(_templatesPath);
-            string template = "IdentityTemplate.html";
-            string FilePath = Path.Combine(path, template);
-
             string body = $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.";
-
-            StreamReader str = new StreamReader(FilePath);
-            string mailText = str.ReadToEnd();
-            str.Close();
+            
+            string mailText = EmailHelper.BuildTemplate(_templatesPath, "IdentityTemplate.html");
             mailText = mailText.Replace("[username]", user.UserName).Replace("[body]", body);
 
             await _emailService.SendAsync(email, "Confirm your email", mailText, true);
