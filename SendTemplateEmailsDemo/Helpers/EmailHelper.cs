@@ -6,9 +6,7 @@ namespace SendTemplateEmailsDemo.Helpers
     {
         public static string BuildTemplate(string path, string template)
         {
-            string fullPath = Path.Combine(path, template);
-            
-            StreamReader str = new StreamReader(fullPath);
+            StreamReader str = new StreamReader(Path.Combine(path, template));
             string mailText = str.ReadToEnd();
             str.Close();
             
